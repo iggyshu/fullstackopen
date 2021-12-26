@@ -1,0 +1,17 @@
+title Single Page App - New Note
+
+browser->browser: redraw notes
+
+note over browser:
+the browser appends the note
+to the existing <ul> element
+end note
+
+browser->server: HTTP POST https://studies.cs.helsinki.fi/exampleapp/new_note_spa
+
+note over server:
+the server persists the note
+end note
+
+server-->browser: 201 Created
+
