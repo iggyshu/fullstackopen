@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const Number = ({ name, number }) => (
   <div>
@@ -41,16 +42,22 @@ const PersonForm = ({
 );
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: "Arto Hellas", number: "040-1234567" },
-    { name: "Ada Lovelace", number: "39-44-5323523", id: 2 },
-    { name: "Dan Abramov", number: "12-43-234345", id: 3 },
-    { name: "Mary Poppendieck", number: "39-23-6423122", id: 4 },
-  ]);
+  const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [searchParam, setSearchParam] = useState("");
   const [matchedPersons, setMatchedPersons] = useState(persons);
+
+  useEffect(() => {
+    axios.get("http://localhost:3001/persons").then((response) => {
+      setPersons(response.data);
+    });
+  }, []);
+
+  useEffect(() => {
+    setMatchedPersons(persons.concat());
+    setSearchParam("");
+  }, [persons]);
 
   const handleFormSubmit = (event) => {
     event.preventDefault();
@@ -58,10 +65,8 @@ const App = () => {
       alert(`${newName} is already added to phonebook`);
     } else {
       setPersons(persons.concat([{ name: newName, number: newNumber }]));
-      setMatchedPersons(persons.concat([{ name: newName, number: newNumber }]));
       setNewName("");
       setNewNumber("");
-      setSearchParam("");
     }
   };
 
