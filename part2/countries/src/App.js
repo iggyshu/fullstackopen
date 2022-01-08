@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const Countries = ({countries}) => (
-    <div>
-        {countries.map((country) => (
-          <div key={country.name.official}>{country.name.common}</div>
-        ))}
-    </div>
+const Countries = ({ countries, onCountryClick }) => (
+  <div>
+    {countries.map((country) => (
+      <div key={country.name.official}>
+        {country.name.common}
+        <button onClick={() => onCountryClick(country.name.common)}>
+          show
+        </button>
+      </div>
+    ))}
+  </div>
 );
 
-const Country = ({country}) => (
+const Country = ({ country }) => (
   <div>
     <h2>{country.name.common}</h2>
     <div>capital {country.capital[0]}</div>
@@ -26,6 +31,29 @@ const Country = ({country}) => (
   </div>
 );
 
+const Search = ({ value, onValueChange }) => {
+  return (
+    <div>
+      find countries
+      <input
+        value={value}
+        onChange={(event) => onValueChange(event.target.value)}
+      />
+    </div>
+  );
+};
+
+const Main = ({ countries, onCountryClick }) => {
+  if (countries.length === 1) {
+    // console.log(countries[0]);
+    return <Country country={countries[0]} />;
+  } else if (countries.length < 10) {
+    return <Countries countries={countries} onCountryClick={onCountryClick} />;
+  } else {
+    return <div>Too many matches, specify another filter</div>;
+  }
+};
+
 const App = () => {
   const [searchParam, setSearchParam] = useState("");
   const [countries, setCountries] = useState([]);
@@ -36,33 +64,25 @@ const App = () => {
         .get(`https://restcountries.com/v3.1/name/${searchParam}`)
         .then((response) => {
           setCountries(response.data);
+        })
+        .catch((reason) => {
+          console.log("failed request", reason);
+          setCountries([]);
         });
     } else {
       setCountries([]);
     }
   }, [searchParam]);
 
-  let Main;
-
-  if (countries.length === 1) {
-    // console.log(countries[0]);
-    Main = (<Country country={countries[0]} />);
-  } else if (countries.length < 10) {
-    Main = (<Countries countries={countries} />);
-  } else {
-    Main = (<div>Too many matches, specify another filter</div>);
-  }
+  const handleCountryClick = (countryName) => {
+    // console.log(countryName);
+    setSearchParam(countryName);
+  };
 
   return (
     <div>
-      <div>
-        find countries
-        <input
-          value={searchParam}
-          onChange={(event) => setSearchParam(event.target.value)}
-        />
-      </div>
-      {Main}
+      <Search value={searchParam} onValueChange={setSearchParam} />
+      <Main countries={countries} onCountryClick={handleCountryClick} />
     </div>
   );
 };
