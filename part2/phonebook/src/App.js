@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import noteService from "./services/persons";
 
 const Number = ({ name, number }) => (
   <div>
@@ -46,16 +47,16 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [searchParam, setSearchParam] = useState("");
-  const [matchedPersons, setMatchedPersons] = useState(persons);
+  const [matchedPersons, setMatchedPersons] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:3001/persons").then((response) => {
-      setPersons(response.data);
+    noteService.getAll().then((response) => {
+      setPersons(response);
     });
   }, []);
 
   useEffect(() => {
-    setMatchedPersons(persons.concat());
+    setMatchedPersons(persons);
     setSearchParam("");
   }, [persons]);
 
@@ -64,9 +65,15 @@ const App = () => {
     if (persons.find((item) => item.name === newName)) {
       alert(`${newName} is already added to phonebook`);
     } else {
-      setPersons(persons.concat([{ name: newName, number: newNumber }]));
-      setNewName("");
-      setNewNumber("");
+      const person = {
+        name: newName,
+        number: newNumber,
+      };
+      noteService.create(person).then((response) => {
+        setPersons(persons.concat([{ name: newName, number: newNumber }]));
+        setNewName("");
+        setNewNumber("");
+      });
     }
   };
 
