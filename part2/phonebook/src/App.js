@@ -2,16 +2,23 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import noteService from "./services/persons";
 
-const Number = ({ name, number }) => (
+const Number = ({ id, name, number, onDeleteClick }) => (
   <div>
     {name} {number}
+    <button onClick={() => onDeleteClick(id)}>delete</button>
   </div>
 );
 
-const Persons = ({ persons }) => (
+const Persons = ({ persons, onDeleteClick }) => (
   <div>
     {persons.map((person) => (
-      <Number name={person.name} number={person.number} key={person.name} />
+      <Number
+        id={person.id}
+        name={person.name}
+        number={person.number}
+        key={person.name}
+        onDeleteClick={onDeleteClick}
+      />
     ))}
   </div>
 );
@@ -70,7 +77,8 @@ const App = () => {
         number: newNumber,
       };
       noteService.create(person).then((response) => {
-        setPersons(persons.concat([{ name: newName, number: newNumber }]));
+        // console.log(response);
+        setPersons(persons.concat([{ ...response }]));
         setNewName("");
         setNewNumber("");
       });
@@ -100,6 +108,15 @@ const App = () => {
     setNewNumber(event.target.value);
   };
 
+  const handleDeleteClick = (id) => {
+    if (window.confirm("Do you really want to delete this entry?")) {
+      noteService.remove(id).then((response) => {
+        // console.log(response);
+        setPersons(persons.filter((person) => person.id !== id));
+      });
+    }
+  };
+
   return (
     <div>
       <h2>Phonebook</h2>
@@ -113,7 +130,7 @@ const App = () => {
         onNumberChange={handleNumberChange}
       />
       <h3>Numbers</h3>
-      <Persons persons={matchedPersons} />
+      <Persons persons={matchedPersons} onDeleteClick={handleDeleteClick} />
     </div>
   );
 };
