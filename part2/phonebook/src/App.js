@@ -70,7 +70,20 @@ const App = () => {
   const handleFormSubmit = (event) => {
     event.preventDefault();
     if (persons.find((item) => item.name === newName)) {
-      alert(`${newName} is already added to phonebook`);
+      const message = `${newName} is already added to phonebook, replace the old number with a new one?`;
+      if (window.confirm(message)) {
+        const person = persons.find((person) => person.name === newName);
+        const id = person.id;
+        const newPerson = { ...person, number: newNumber };
+        noteService.update(id, newPerson).then((returnedPerson) => {
+          // console.log('returned person', returnedPerson);
+          setPersons(
+            persons.map((person) =>
+              person.id !== id ? person : returnedPerson
+            )
+          );
+        });
+      }
     } else {
       const person = {
         name: newName,
