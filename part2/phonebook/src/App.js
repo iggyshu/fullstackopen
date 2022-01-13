@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import "./App.css";
 import noteService from "./services/persons";
 
 const Number = ({ id, name, number, onDeleteClick }) => (
@@ -49,12 +49,20 @@ const PersonForm = ({
   </form>
 );
 
+const Notification = ({ message }) => {
+  if (message == null) {
+    return null;
+  }
+  return <div className={message.messageType}>{message.text}</div>;
+};
+
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [searchParam, setSearchParam] = useState("");
   const [matchedPersons, setMatchedPersons] = useState([]);
+  const [message, setMessage] = useState();
 
   useEffect(() => {
     noteService.getAll().then((response) => {
@@ -67,6 +75,16 @@ const App = () => {
     setSearchParam("");
   }, [persons]);
 
+  const showNotification = (text, type) => {
+    const message = {
+      text: text,
+      messageType: type,
+    };
+    // console.log(message);
+    setMessage(message);
+    setTimeout(() => setMessage(null), 2000);
+  };
+
   const handleFormSubmit = (event) => {
     event.preventDefault();
     if (persons.find((item) => item.name === newName)) {
@@ -77,6 +95,7 @@ const App = () => {
         const newPerson = { ...person, number: newNumber };
         noteService.update(id, newPerson).then((returnedPerson) => {
           // console.log('returned person', returnedPerson);
+          showNotification(`Updated ${returnedPerson.name}`, "info");
           setPersons(
             persons.map((person) =>
               person.id !== id ? person : returnedPerson
@@ -91,6 +110,7 @@ const App = () => {
       };
       noteService.create(person).then((response) => {
         // console.log(response);
+        showNotification(`Added ${response.name}`, "info");
         setPersons(persons.concat([{ ...response }]));
         setNewName("");
         setNewNumber("");
@@ -123,16 +143,31 @@ const App = () => {
 
   const handleDeleteClick = (id) => {
     if (window.confirm("Do you really want to delete this entry?")) {
-      noteService.remove(id).then((response) => {
-        // console.log(response);
-        setPersons(persons.filter((person) => person.id !== id));
-      });
+      noteService
+        .remove(id)
+        .then((response) => {
+          // console.log(response);
+          showNotification(
+            `Information was successfully removed from the server`,
+            "info"
+          );
+          setPersons(persons.filter((person) => person.id !== id));
+        })
+        .catch((error) => {
+          console.log(error);
+          showNotification(
+            `Information has already been removed from the server`,
+            "error"
+          );
+          setPersons(persons.filter((person) => person.id !== id));
+        });
     }
   };
 
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message} />
       <Filter value={searchParam} onValueChange={handleSearchParamChange} />
       <h3>Add a new</h3>
       <PersonForm
