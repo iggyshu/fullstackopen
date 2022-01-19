@@ -41,8 +41,14 @@ app.get("/api/persons/:id", (request, response) => {
   if (person) {
     response.json(person);
   } else {
-    response.status(404).send('Requested person does not exist in phonebook.');
+    response.status(404).send("Requested person does not exist in phonebook.");
   }
+});
+
+app.delete("/api/persons/:id", (request, response) => {
+  const id = Number(request.params.id);
+  persons = persons.filter((item) => item.id !== id);
+  response.status(204).end();
 });
 
 const PORT = 3001;
