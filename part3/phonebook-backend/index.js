@@ -1,5 +1,7 @@
 const express = require("express");
+const bodyParser = require("body-parser");
 const app = express();
+app.use(bodyParser.json());
 
 let persons = [
   {
@@ -49,6 +51,29 @@ app.delete("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
   persons = persons.filter((item) => item.id !== id);
   response.status(204).end();
+});
+
+const generateId = () => {
+  return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+};
+
+app.post("/api/persons", (request, response) => {
+  const body = request.body;
+  if (!body.phone || !body.name) {
+    return response.status(400).json({
+      error: "phone or name are missing",
+    });
+  }
+
+  const person = {
+    id: generateId(),
+    name: body.name,
+    phone: body.phone,
+  };
+
+  persons = persons.concat(person);
+
+  response.json(person);
 });
 
 const PORT = 3001;
