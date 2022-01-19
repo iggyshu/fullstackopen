@@ -24,18 +24,27 @@ let persons = [
   },
 ];
 
-app.get('/info', (request, response) => {
+app.get("/info", (request, response) => {
   let info = `Phonebook has info for ${persons.length} people`;
   info = info + "\n" + new Date().toString();
-  response.setHeader('Content-Type', 'text/plain');
+  response.setHeader("Content-Type", "text/plain");
   response.send(info);
 });
 
-app.get('/api/persons', (request, response) => {
+app.get("/api/persons", (request, response) => {
   response.json(persons);
+});
+
+app.get("/api/persons/:id", (request, response) => {
+  const id = Number(request.params.id);
+  const person = persons.find((item) => item.id === id);
+  if (person) {
+    response.json(person);
+  } else {
+    response.status(404).send('Requested person does not exist in phonebook.');
+  }
 });
 
 const PORT = 3001;
 app.listen(PORT);
 console.log(`Server running on port ${PORT}`);
-
