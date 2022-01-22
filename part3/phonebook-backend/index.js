@@ -1,6 +1,8 @@
 const express = require("express");
 const morgan = require("morgan");
+const cors = require("cors");
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 morgan.token("body", function getBody(req) {
@@ -65,7 +67,7 @@ const generateId = () => {
 
 app.post("/api/persons", (request, response) => {
   const body = request.body;
-  if (!body.phone || !body.name) {
+  if (!body.number || !body.name) {
     return response.status(400).json({
       error: "The name or phone number is missing",
     });
@@ -80,7 +82,7 @@ app.post("/api/persons", (request, response) => {
   const person = {
     id: generateId(),
     name: body.name,
-    phone: body.phone,
+    number: body.number,
   };
 
   persons = persons.concat(person);
