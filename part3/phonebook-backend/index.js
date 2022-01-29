@@ -5,8 +5,8 @@ const cors = require("cors");
 const app = express();
 const Person = require('./models/person');
 app.use(cors());
-app.use(express.json());
 app.use(express.static('build'));
+app.use(express.json());
 
 morgan.token("body", function getBody(req) {
   return JSON.stringify(req.body);
@@ -15,10 +15,13 @@ morgan.token("body", function getBody(req) {
 app.use(morgan(":method :url :status :response-time :body"));
 
 app.get("/info", (request, response) => {
-  let info = `Phonebook has info for ${persons.length} people`;
-  info = info + "\n" + new Date().toString();
-  response.setHeader("Content-Type", "text/plain");
-  response.send(info);
+  Person.count((err, res) => {
+    if (err) { console.log(err); }
+    let info = `Phonebook has info for ${res} people`;
+    info = info + "\n" + new Date().toString();
+    response.setHeader("Content-Type", "text/plain");
+    response.send(info);
+  });
 });
 
 app.get("/api/persons", (request, response) => {
@@ -27,50 +30,77 @@ app.get("/api/persons", (request, response) => {
   });
 });
 
-app.get("/api/persons/:id", (request, response) => {
+app.get("/api/persons/:id", (request, response, next) => {
+  Person.findById(request.params.id).then(person => {
+    if (person) {
+      response.json(person);
+    } else {
+      response.status(404).send("Requested person does not exist in phonebook.");
+    }
+  }).catch(error => {
+    next(error)
+  });
+});
+
+app.delete("/api/persons/:id", (request, response, next) => {
   const id = request.params.id;
-  if (id.length !== 24) {
-    response.status(400).end();
+  Person.findByIdAndDelete(id).then(result => {
+    response.status(204).end();
+  }).catch(error => next(error));
+});
+
+app.post("/api/persons", (request, response) => {
+  body = request.body;
+  if (!body.number || !body.name) {
+    response.status(400).json({
+      error: "The name or phone number is missing",
+    });
   } else {
-    Person.findById(id).then(person => {
+    Person.findOne({ name: body.name }).then(person => {
       if (person) {
-        response.json(person);
+        response.status(400).json({
+          error: "The name must be unique",
+        });
       } else {
-        response.status(404).send("Requested person does not exist in phonebook.");
+        const person = {
+          name: body.name,
+          number: body.number,
+        };
+        Person.create(person).then(person => {
+          response.json(person);
+        });
       }
     });
   }
 });
 
-app.delete("/api/persons/:id", (request, response) => {
-  const id = request.params.id;
-  Person.findByIdAndDelete(id).then(result => {
-    response.status(204).end();
-  });
-});
-
-app.post("/api/persons", (request, response) => {
+app.put("/api/persons/:id", (request, response, next) => {
   const body = request.body;
-  if (!body.number || !body.name) {
-    return response.status(400).json({
-      error: "The name or phone number is missing",
-    });
-  }
-
-  // if (persons.find((item) => item.name === body.name)) {
-  //   return response.status(400).json({
-  //     error: "The name must be unique",
-  //   });
-  // }
 
   const person = {
     name: body.name,
     number: body.number,
-  };
-  Person.create(person).then(person => {
-    response.json(person);
-  });
-});
+  }
+
+  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    .then(updatedPerson => {
+      response.json(updatedPerson);
+    })
+    .catch(error => next(error));
+})
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformed id' });
+  }
+
+  next(error);
+}
+
+// this has to be the last loaded middleware.
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
