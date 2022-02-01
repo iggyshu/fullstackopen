@@ -10,12 +10,19 @@ mongoose.connect(url)
     console.log('error connecting to MongoDB:', error.message) 
   });
 
-const noteSchema = new mongoose.Schema({
-  name: String,
-  number: String,
-})
+const personSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    minLength: 3,
+    required: true
+  },
+  number: {
+    type: String,
+    required: true
+  }
+});
 
-noteSchema.set('toJSON', {
+personSchema.set('toJSON', {
   transform: (document, returnedObject) => {
     returnedObject.id = returnedObject._id.toString()
     delete returnedObject._id
@@ -23,4 +30,4 @@ noteSchema.set('toJSON', {
   }
 })
 
-module.exports = mongoose.model('Person', noteSchema)
+module.exports = mongoose.model('Person', personSchema)

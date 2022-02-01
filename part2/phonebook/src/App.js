@@ -93,28 +93,42 @@ const App = () => {
         const person = persons.find((person) => person.name === newName);
         const id = person.id;
         const newPerson = { ...person, number: newNumber };
-        noteService.update(id, newPerson).then((returnedPerson) => {
-          // console.log('returned person', returnedPerson);
-          showNotification(`Updated ${returnedPerson.name}`, "info");
-          setPersons(
-            persons.map((person) =>
-              person.id !== id ? person : returnedPerson
-            )
-          );
-        });
+        noteService
+          .update(id, newPerson)
+          .then((returnedPerson) => {
+            // console.log('returned person', returnedPerson);
+            showNotification(`Updated ${returnedPerson.name}`, "info");
+            setPersons(
+              persons.map((person) =>
+                person.id !== id ? person : returnedPerson
+              )
+            );
+          })
+          .catch((error) => {
+            console.log(error);
+            const errMsg = error.response.data.error;
+            showNotification(errMsg, "error");
+          });
       }
     } else {
       const person = {
         name: newName,
         number: newNumber,
       };
-      noteService.create(person).then((response) => {
-        // console.log(response);
-        showNotification(`Added ${response.name}`, "info");
-        setPersons(persons.concat([{ ...response }]));
-        setNewName("");
-        setNewNumber("");
-      });
+      console.log("post request");
+      noteService
+        .create(person)
+        .then((response) => {
+          showNotification(`Added ${response.name}`, "info");
+          setPersons(persons.concat([{ ...response }]));
+          setNewName("");
+          setNewNumber("");
+        })
+        .catch((error) => {
+          console.log(error);
+          const errMsg = error.response.data.error;
+          showNotification(errMsg, "error");
+        });
     }
   };
 
