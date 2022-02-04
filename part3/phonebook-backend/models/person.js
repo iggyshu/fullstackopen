@@ -18,6 +18,15 @@ const personSchema = new mongoose.Schema({
   },
   number: {
     type: String,
+    minLength: 8,
+    validate: {
+      validator: v => /^((\d{2,3}-)?\d+)$/.exec(v),
+      message: `Invalid number. A phone number must have length of 8 or more.
+If formed of two parts that are separated by -, 
+the first part must have two or three numbers 
+and the second part also consists of numbers.
+`
+    },
     required: true
   }
 });
